@@ -1,0 +1,183 @@
+<Window x:Class="SyncForge.Desktop.MainWindow"
+        x:Name="Root"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SyncForge" Height="820" Width="1280" MinHeight="700" MinWidth="1060">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Background="#162338" Padding="28,18">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="34" Height="34" CornerRadius="8" Background="#2266D4" Margin="0,0,12,0">
+                        <TextBlock Text="↔" FontSize="21" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="SyncForge" FontSize="22" FontWeight="SemiBold" Foreground="White" />
+                        <TextBlock Text="PostgreSQL synchronization control center" Foreground="#B8C7DF" FontSize="12" />
+                    </StackPanel>
+                </StackPanel>
+                <Button HorizontalAlignment="Right" VerticalAlignment="Center" Content="Refresh data" Click="Refresh_Click" />
+            </Grid>
+        </Border>
+
+        <TabControl Grid.Row="1" Margin="22" BorderThickness="0" Background="Transparent" SelectionChanged="MainTabs_SelectionChanged">
+            <TabItem Header="  Overview  ">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10,20">
+                        <TextBlock Text="Sync operations, at a glance" FontSize="28" FontWeight="SemiBold" />
+                        <TextBlock Text="Kredensial diamankan dengan Windows DPAPI. Worker membaca konfigurasi terbaru di setiap siklus." Foreground="{StaticResource MutedBrush}" Margin="0,8,0,22" />
+                        <UniformGrid Columns="4" Margin="0,0,0,24">
+                            <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Margin="0,0,14,0" Padding="18">
+                                <StackPanel><TextBlock Text="CONNECTIONS" Foreground="{StaticResource MutedBrush}" FontSize="11" /><TextBlock x:Name="ConnectionsCountText" Text="0" FontSize="30" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
+                            </Border>
+                            <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Margin="0,0,14,0" Padding="18">
+                                <StackPanel><TextBlock Text="ENABLED JOBS" Foreground="{StaticResource MutedBrush}" FontSize="11" /><TextBlock x:Name="EnabledJobsCountText" Text="0" FontSize="30" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
+                            </Border>
+                            <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Margin="0,0,14,0" Padding="18">
+                                <StackPanel><TextBlock Text="SUCCESSFUL RUNS" Foreground="{StaticResource MutedBrush}" FontSize="11" /><TextBlock x:Name="SuccessCountText" Text="0" FontSize="30" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
+                            </Border>
+                            <Border Background="#FFF7E6" BorderBrush="#F2D49B" BorderThickness="1" CornerRadius="10" Padding="18">
+                                <StackPanel><TextBlock Text="GUARD-RAIL SKIPS" Foreground="#8A5B00" FontSize="11" /><TextBlock x:Name="SkippedCountText" Text="0" FontSize="30" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
+                            </Border>
+                        </UniformGrid>
+                        <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="22">
+                            <StackPanel>
+                                <TextBlock Text="Safety contract" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Text="Setiap run memvalidasi mapping, minimum row count, penurunan jumlah baris, dan stabilitas sumber sebelum COPY dimulai. Mode Truncate &amp; Reload memakai staging table serta atomic rename-swap; tabel tujuan dengan foreign key masuk tidak akan ditukar secara berbahaya." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="  Connections  ">
+                <Grid Margin="10,20">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="420" /></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="Database connections" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock Text="Source hanya memerlukan akses baca; Target memerlukan baca/tulis." Foreground="{StaticResource MutedBrush}" Margin="0,6,0,16" />
+                        <DataGrid x:Name="ConnectionsGrid" ItemsSource="{Binding Connections}" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="ConnectionsGrid_SelectionChanged">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="110" />
+                                <DataGridTextColumn Header="Host" Binding="{Binding Host}" Width="180" />
+                                <DataGridTextColumn Header="Database" Binding="{Binding Database}" Width="150" />
+                                <DataGridTextColumn Header="User" Binding="{Binding Username}" Width="140" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="Pilih koneksi untuk mengedit. Password tidak pernah ditampilkan di histori atau log." Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,10,0,0" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="22">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="Connection details" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Text="Name" Margin="0,18,0,5" /><TextBox x:Name="ConnectionNameBox" />
+                                <TextBlock Text="Role" Margin="0,12,0,5" />
+                                <ComboBox x:Name="ConnectionRoleBox" SelectedIndex="0"><ComboBoxItem Content="Source" /><ComboBoxItem Content="Target" /></ComboBox>
+                                <TextBlock Text="Host" Margin="0,12,0,5" /><TextBox x:Name="ConnectionHostBox" />
+                                <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,10,0"><TextBlock Text="Port" Margin="0,0,0,5" /><TextBox x:Name="ConnectionPortBox" Text="5432" /></StackPanel>
+                                    <StackPanel Grid.Column="1"><TextBlock Text="Database" Margin="0,0,0,5" /><TextBox x:Name="ConnectionDatabaseBox" /></StackPanel>
+                                </Grid>
+                                <TextBlock Text="Username" Margin="0,12,0,5" /><TextBox x:Name="ConnectionUsernameBox" />
+                                <TextBlock Text="Password" Margin="0,12,0,5" /><PasswordBox x:Name="ConnectionPasswordBox" />
+                                <TextBlock Text="Password di-protect menggunakan Windows DPAPI level mesin; database konfigurasi harus tetap dibatasi ke admin dan service account." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,7,0,16" />
+                                <WrapPanel><Button Content="New" Click="NewConnection_Click" /><Button Content="Test connection" Click="TestConnection_Click" /><Button Content="Save connection" Style="{StaticResource PrimaryButton}" Click="SaveConnection_Click" /></WrapPanel>
+                                <Button Content="Delete selected" Margin="0,10,0,0" HorizontalAlignment="Left" Click="DeleteConnection_Click" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="  Jobs &amp; mapping  ">
+                <Grid Margin="10,20">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="300" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="Sync jobs" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock Text="Satu job untuk satu mapping tabel." Foreground="{StaticResource MutedBrush}" Margin="0,6,0,16" />
+                        <ListBox x:Name="JobsList" ItemsSource="{Binding Jobs}" DisplayMemberPath="Name" MinHeight="430" SelectionChanged="JobsList_SelectionChanged" />
+                        <WrapPanel Margin="0,14,0,0"><Button Content="New job" Click="NewJob_Click" /><Button Content="Delete" Click="DeleteJob_Click" /></WrapPanel>
+                    </StackPanel>
+                    <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="Job configuration" FontSize="24" FontWeight="SemiBold" />
+                            <TextBlock Text="Ambil schema dari kedua server; pemilihan tabel dan kolom hanya berasal dari metadata database." Foreground="{StaticResource MutedBrush}" Margin="0,6,0,18" />
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="190" /></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,12,0"><TextBlock Text="Job name" Margin="0,0,0,5" /><TextBox x:Name="JobNameBox" /></StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,12,0"><TextBlock Text="Mode" Margin="0,0,0,5" /><ComboBox x:Name="JobModeBox" SelectionChanged="JobModeBox_SelectionChanged"><ComboBoxItem Content="Incremental" /><ComboBoxItem Content="Truncate &amp; Reload" /></ComboBox></StackPanel>
+                                <CheckBox x:Name="JobEnabledBox" Grid.Column="2" Content="Enabled" IsChecked="True" VerticalAlignment="Bottom" Margin="0,0,0,9" />
+                            </Grid>
+                            <Grid Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,12,0"><TextBlock Text="Source connection" Margin="0,0,0,5" /><ComboBox x:Name="SourceConnectionBox" ItemsSource="{Binding SourceConnections}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="SourceConnectionBox_SelectionChanged" /></StackPanel>
+                                <StackPanel Grid.Column="1"><TextBlock Text="Target connection" Margin="0,0,0,5" /><ComboBox x:Name="TargetConnectionBox" ItemsSource="{Binding TargetConnections}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="TargetConnectionBox_SelectionChanged" /></StackPanel>
+                            </Grid>
+                            <Grid Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,12,0"><TextBlock Text="Source table" Margin="0,0,0,5" /><ComboBox x:Name="SourceTableBox" ItemsSource="{Binding SourceTables}" DisplayMemberPath="QualifiedName" SelectedValuePath="QualifiedName" SelectionChanged="SourceTableBox_SelectionChanged" /></StackPanel>
+                                <StackPanel Grid.Column="1"><TextBlock Text="Target table" Margin="0,0,0,5" /><ComboBox x:Name="TargetTableBox" ItemsSource="{Binding TargetTables}" DisplayMemberPath="QualifiedName" SelectedValuePath="QualifiedName" SelectionChanged="TargetTableBox_SelectionChanged" /></StackPanel>
+                            </Grid>
+                            <WrapPanel Margin="0,12,0,0"><Button Content="Load schema" Click="LoadSchema_Click" /><Button Content="Auto-suggest mapping" Click="AutoMap_Click" Style="{StaticResource PrimaryButton}" /></WrapPanel>
+                            <Grid Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="160" /><ColumnDefinition Width="160" /></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,12,0"><TextBlock Text="Timestamp column (Incremental)" Margin="0,0,0,5" /><ComboBox x:Name="TimestampColumnBox" ItemsSource="{Binding SourceColumns}" DisplayMemberPath="Name" SelectedValuePath="Name" /></StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,12,0"><TextBlock Text="Minimum rows" Margin="0,0,0,5" /><TextBox x:Name="MinimumRowsBox" Text="0" /></StackPanel>
+                                <StackPanel Grid.Column="2"><TextBlock Text="Max drop (%)" Margin="0,0,0,5" /><TextBox x:Name="MaximumDropBox" Text="30" /></StackPanel>
+                            </Grid>
+                            <Grid Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="170" /><ColumnDefinition Width="170" /></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,12,0"><TextBlock Text="Schedule (5-field cron)" Margin="0,0,0,5" /><TextBox x:Name="ScheduleCronBox" Text="0 2 * * *" /></StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,12,0"><TextBlock Text="Quiescence delay (seconds)" Margin="0,0,0,5" /><TextBox x:Name="StabilityDelayBox" Text="15" /></StackPanel>
+                                <CheckBox x:Name="StabilityCheckBox" Grid.Column="2" Content="Stability check enabled" IsChecked="True" VerticalAlignment="Bottom" Margin="0,0,0,9" />
+                            </Grid>
+                            <TextBlock Text="Column mapping" FontSize="18" FontWeight="SemiBold" Margin="0,22,0,8" />
+                            <DataGrid x:Name="MappingsGrid" ItemsSource="{Binding Mappings}" AutoGenerateColumns="False" Height="230">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Source column" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding DataContext.SourceColumns, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" DisplayMemberPath="Name" SelectedValuePath="Name" SelectedValue="{Binding SourceColumn, UpdateSourceTrigger=PropertyChanged}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Target column" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding DataContext.TargetColumns, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" DisplayMemberPath="Name" SelectedValuePath="Name" SelectedValue="{Binding TargetColumn, UpdateSourceTrigger=PropertyChanged}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridCheckBoxColumn Header="Primary key" Width="100" Binding="{Binding IsPrimaryKey}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <TextBlock Text="Tandai satu atau beberapa kolom primary key. Mode incremental memakai key ini untuk INSERT ... ON CONFLICT DO UPDATE." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,7,0,14" />
+                            <WrapPanel><Button Content="Add mapping row" Click="AddMappingRow_Click" /><Button Content="Clear mappings" Click="ClearMappings_Click" /><Button Content="Save job" Style="{StaticResource PrimaryButton}" Click="SaveJob_Click" /></WrapPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="  Run history  ">
+                <Grid Margin="10,20"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal"><StackPanel><TextBlock Text="Run history" FontSize="24" FontWeight="SemiBold" /><TextBlock Text="Checkpoint hanya dicatat setelah transaksi target berhasil commit." Foreground="{StaticResource MutedBrush}" Margin="0,6,0,16" /></StackPanel><Button Content="Refresh history" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="24,0,0,0" Click="RefreshHistory_Click" /></StackPanel>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding History}" AutoGenerateColumns="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="175" />
+                            <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="*" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="130" />
+                            <DataGridTextColumn Header="Rows" Binding="{Binding RowsProcessed}" Width="100" />
+                            <DataGridTextColumn Header="Source rows" Binding="{Binding SourceRowCount}" Width="110" />
+                            <DataGridTextColumn Header="Message" Binding="{Binding ErrorMessage}" Width="2*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="22,10">
+            <TextBlock x:Name="StatusText" Text="Ready" Foreground="{StaticResource MutedBrush}" />
+        </Border>
+    </Grid>
+</Window>
